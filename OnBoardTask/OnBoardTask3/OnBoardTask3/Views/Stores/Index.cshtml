@@ -1,0 +1,139 @@
+﻿@model IEnumerable<OnBoardTask3.Models.Store>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    <a href="javascript:void(1);" id="createStore">Create Store</a>
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.StoreName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.StoreAddress)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.StoreName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StoreAddress)
+            </td>
+            <td>
+                <a href="javascript:void(0);" class="editStore" data-id="@item.StoreId">Edit</a> |
+                @*<a href="javascript:void(0);" class="viewStore" data-id="@item.StoreId">Details</a> *@ |
+                <a href="javascript:void(0);" class="deleteStore" data-id="@item.StoreId">Delete</a>
+            </td>
+        </tr>
+    }
+
+</table>
+<script src="~/Scripts/jquery-3.3.1.min.js"></script>
+<script src="~/Scripts/knockout-3.4.2.js"></script>
+
+<script>
+    $(function () {
+        ko.applyBindings(modelView);
+        modelView.viewStores();
+    });
+    var modelView = {
+        Customers: ko.observableArray([]),
+        viewStores: function () {
+            var thisObj = this;
+            try {
+                $.ajax({
+                    url: '/Stores/StoreList',
+                    type: 'GET',
+                    dataType: 'json',
+                    //data: Json.stringify(this),
+                    contentType: 'application/json',
+                    success: function (data) {
+                        thisObj.Stores(data); //Here we are assigning values to KO Observable array
+                    },
+                    //error: function (err) {
+                    //    alert(err.status + " : " + err.statusText);
+                    //}
+                });
+            } catch (e) {
+                window.location.href = '/Stores/Index/';
+            }
+        }
+    };
+
+</script>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" id="myModalContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="clsBtn">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        var getAjaxContent = function (controller, action, data) {
+            var URL = "/" + controller + "/" + action;
+            var options = { "backdrop": "static", keyboard: true };
+            $.ajax({
+                type: "GET",
+                url: URL,
+                contentType: "application/json; charset=utf-8",
+                data: data,
+                datatype: "html",
+                success: function (data) {
+                    $('#myModalContent').html(data);
+                    $('#myModal').modal(options);
+                    $('#myModal').modal('show');
+                },
+                error: function () {
+                    alert("Dynamic content load failed.");
+                }
+            });
+        }
+        $("document").ready(function () {
+            $('.viewStore').click(function () {
+                var $buttonClicked = $(this);
+                var id = $buttonClicked.attr('data-id');
+                getAjaxContent("Stores", "Details", { "ID": id });
+            });
+
+
+            $('#createStore').click(function () {
+                getAjaxContent("Stores", "Create", null);
+            });
+
+            $('.editStore').click(function () {
+                var $buttonClicked = $(this);
+                var id = $buttonClicked.attr('data-id');
+                getAjaxContent("Stores", "Edit", { "ID": id });
+            });
+
+            $('.deleteStore').click(function () {
+                var $buttonClicked = $(this);
+                var id = $buttonClicked.attr('data-id');
+                getAjaxContent("Stores", "Delete", { "ID": id });
+            });
+        });
+
+    </script>
+}

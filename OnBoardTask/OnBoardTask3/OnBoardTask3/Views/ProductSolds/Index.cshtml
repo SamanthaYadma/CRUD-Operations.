@@ -1,0 +1,353 @@
+﻿@model OnBoardTask3.Models.ProductSold
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+<p>
+    <a href="javascript:void(0);" data-bind="click: createSale"
+       class="btn-create btn btn-primary">Create Sale</a>
+</p>
+<table class="table table-responsive table-hover table-striped table-bordered">
+    <tr>
+      
+        <th>
+            @Html.DisplayNameFor(model => model.Customer.CustomerName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Product.ProductName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Store.StoreName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.DateSold)
+        </th>
+        <th>Actions</th>
+    </tr>
+
+    <tbody data-bind="foreach: ProductSolds">
+        <tr>
+            @*<td data-bind="text: Id"></td>*@
+            <td data-bind="text: CustomerName"></td>
+            <td data-bind="text: ProductName"></td>
+            <td data-bind="text: StoreName"></td>
+            <td data-bind="text: DateSold"></td>
+            <td>
+                <a href="javascript:void(0);" data-bind="click: $parent.editSale"
+                   class="btn-details btn btn-default">Edit</a>
+                @*<a href="javascript:void(0);" data-bind="click: $parent.viewSale"
+                    class="btn-edit btn btn-default">Details</a>*@
+                <a href="javascript:void(0);" data-bind="click: $parent.deleteSale"
+                   class="btn-delete btn btn-default">Delete</a>
+            </td>
+        </tr>
+    </tbody>
+
+</table>
+
+<!-- Modal for CRUD operations -->
+<div id="my-modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" id="my-modal-content">
+                <!-- Modal content goes here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="clsBtn">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- End CRUD Modal -->
+<script src="~/Scripts/jquery-3.3.1.min.js"></script>
+<script src="~/Scripts/knockout-3.4.2.js"></script>
+<script src="~/Scripts/knockout.validation.min.js"></script>
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+@section scripts
+{
+    <script type="text/javascript">
+        ko.validation.init({
+            registerExtenders: true,
+            messagesOnModified: true,
+            insertMessages: true,
+            parseInputAttributes: true,
+            errorClass: 'errorStyle',
+            messageTemplate: null
+
+        }, true);
+
+        function Sale(data) {
+            var self = this;
+            self.Id = ko.observable('')
+            self.CustomerId = ko.observable('');
+            self.ProductId = ko.observable('');
+            self.StoreId = ko.observable('');
+            self.CustomerName = ko.observable('');
+            self.ProductName = ko.observable('');
+            self.StoreName = ko.observable('');
+            self.DateSold = ko.observable('').extend({
+                required: {
+                    params:true,
+                   message:('please enter the date')
+                }
+                });
+
+
+
+            // Subcribers to update data's name when dropdown list values are selected.
+            self.CustomerId.subscribe(function (newValue) {
+                if (newValue) {
+                    try {
+                        var elem = document.querySelector("#CustomerId option[value='" + self.CustomerId() + "']");
+                        if (elem)
+                            self.CustomerName(elem.text);
+                    } catch (e) {
+                        //Do nothing.
+                    }
+                };
+            });
+
+            self.ProductId.subscribe(function (newValue) {
+                if (newValue) {
+                    try {
+                        var elem = document.querySelector("#ProductId option[value='" + self.ProductId() + "']");
+                        if (elem)
+                            self.ProductName(elem.text);
+                    } catch (e) {
+                        //Do nothing.
+                    }
+
+
+                };
+            });
+            self.StoreId.subscribe(function (newValue) {
+                if (newValue) {
+                    try {
+                        var elem = document.querySelector("#StoreId option[value='" + self.StoreId() + "']");
+                        if (elem)
+                            self.StoreName(elem.text);
+                    } catch (e) {
+                        //Do nothing.
+                    }
+
+
+                };
+            });
+
+            // Constructor
+            if (data) {
+                self.Id(data.Id);
+                self.CustomerId(data.CustomerId);
+                self.ProductId(data.ProductId);
+                self.StoreId(data.StoreId);
+                self.CustomerName(data.CustomerName);
+                self.ProductName(data.ProductName);
+                self.StoreName(data.StoreName);
+                self.DateSold(data.ReturnDateForDisplay);
+            }
+
+            self.toArray = function () {
+                var output = {
+                    Id: self.Id(),
+                    CustomerId: self.CustomerId(),
+                    ProductId: self.ProductId(),
+                    StoreId: self.StoreId(),
+                    DateSold: self.DateSold(),
+                    CustomerName: self.CustomerName(),
+                    ProductName: self.ProductName(),
+                    StoreName: self.StoreName(),
+                    ReturnDateForDisplay: self.DateSold()
+                };
+                return output;
+            }
+
+        }
+        function SaleViewModel() {
+            var self = this;
+            self.ProductSolds = ko.observableArray();
+            self.selectedSale = new Sale();
+            self.newSale = new Sale();
+
+
+            // Response to view details button.
+            self.viewSale = function (data) {
+                self.selectedSale = data;
+                var options = { "backdrop": "static", keyboard: true };
+                // Call the Details action, expect to get the partial view HTML document.
+                $.ajax({
+                    type: "GET",
+                    url: "/ProductSolds/Details",
+                    datatype: "html",
+                    success: function (data) {
+                        // Insert the partial view HTML into the bootstrap modal.
+                        $('#my-modal-content').html(data);
+                        $('#my-modal').modal(options);
+                        // Apply binding to the newly inserted html section.
+                        //debugger;
+                        ko.applyBindings(self, document.getElementById('sale-details'));
+                        $('#my-modal').modal('show');
+                    }
+                });
+            };
+
+            // Response to 'create sale' button.
+            self.createSale = function () {
+                self.selectedSale = new Sale();
+                var options = { "backdrop": "static", keyboard: true };
+                //debugger;
+                $.ajax({
+                    type: "GET",
+                    url: "/ProductSolds/Create",
+                    datatype: "html",
+                    success: function (data) {
+                        // Insert the partial view HTML into the bootstrap modal.
+                        $('#my-modal-content').html(data);
+                        $('#my-modal').modal(options);
+                        // Apply binding to the newly inserted html section.
+                        ko.applyBindings(self, document.getElementById('create-sale-form'));
+                        $('#my-modal').modal('show');
+                    }
+                });
+            };
+
+            // Response to the 'save' button in the create new sale form.
+            self.saveSale = function (data) {
+                // Calling ajax to save data to sever.
+                $.ajax({
+                    type: "POST",
+                    url: "/ProductSolds/Create",
+                    data: $('#create-sale-form').serialize(),
+                    datatype: "json",
+                    success: function (data) {
+                        if (data > 0) {
+                            // Get the new ID.
+                            self.selectedSale.Id(data);
+                            // formate the date data.
+                            self.selectedSale.DateSold(self.formatDate(self.selectedSale.DateSold()));
+                            // Add the new sale into 'ProductSolds' array.
+
+                            self.ProductSolds.push(self.selectedSale);
+                            //alert("Please enter date");
+                            $('#my-modal').modal('hide');
+                        } else {
+                            alert("Please enter Date");
+                            $('#my-modal').modal('hide');
+
+                        }
+                    }
+                });
+            };
+
+            // Reponse to 'Edit' button.
+            self.editSale = function (data) {
+                self.selectedSale = data;
+                self.newSale = new Sale(data.toArray());
+                self.newSale.errors = ko.validation.group(self.newSale);
+                var options = { "backdrop": "static", keyboard: true };
+                // Call the Details action to get the partial view HTML document.
+                $.ajax({
+                    type: "GET",
+                    url: "/ProductSolds/Edit",
+                    datatype: "html",
+                    success: function (data) {
+                        // Insert the partial view HTML into the bootstrap modal.
+                        $('#my-modal-content').html(data);
+                        $('#my-modal').modal(options);
+                        // Apply binding to the newly inserted html section.
+                        ko.applyBindings(self, document.getElementById('edit-sale-form'));
+                        $('#my-modal').modal('show');
+                    }
+                });
+            };
+            // Reponse to 'Save' button in Edit Sale form.
+            self.editConfirmed = function () {
+                //debugger;
+                if (self.newSale.errors().length === 0) {
+                    //debugger;
+                    // Save new data to the database.
+                    $.ajax({
+                        type: "POST",
+                        url: "/ProductSolds/Edit",
+                        data: $('#edit-sale-form').serialize(),
+                        success: function (data) {
+                            // Update viewModel array.
+                            //debugger;
+                            self.ProductSolds.replace(self.selectedSale, self.newSale);
+                            $('#my-modal').modal('hide');
+                        },
+                    });
+                } else {
+                    alert("Error! Please check your submission.");
+
+                }
+
+            };
+
+
+            //Response to 'Delete' button
+            self.deleteSale = function (data) {
+
+                self.selectedSale = data;
+                //alert(self.selectedSale.CustomerName());
+                var options = { "backdrop": "static", keyboard: true };
+                // Call the Delete action to get the partial view HTML document.
+                 //debugger;
+                $.ajax({
+                    type: "GET",
+                    url: "/ProductSolds/Delete",
+                    datatype: "html",
+                    success: function (data) {
+                        // Insert the partial view HTML into the bootstrap modal.
+                        $('#my-modal-content').html(data);
+                        $('#my-modal').modal(options);
+                        // Apply binding to the newly inserted html section.
+                        ko.applyBindings(self, document.getElementById('deleteSale'));
+                        $('#my-modal').modal('show');
+                    }
+                });
+            };
+
+            // Delete confirmed.
+            self.deleteConfirmed = function () {
+                self.ProductSolds.remove(self.selectedSale);
+                $('#my-modal').modal('hide');
+                $.ajax({
+                    type: "POST",
+                    url: "/ProductSolds/Delete",
+                    data: $('#delete-sale-form').serialize(),
+                    datatype: "html"
+                });
+            };
+
+            
+            self.formatDate = function (string) {
+                var date = new Date(string);
+                var output = (date.getDate() + '/' + date.getMonth()  + '/' + date.getFullYear());
+                return output;
+            };
+
+        };
+
+        ko.validation.registerExtenders();
+        $("document").ready(function () {
+
+            var viewModel = new SaleViewModel();
+            $.get('/ProductSolds/ProductSoldList', function (data) {
+                var sale;
+                $.each(data, function (i, item) {
+                    sale = new Sale(item);
+                    viewModel.ProductSolds.push(sale);
+
+                })
+            });
+            ko.applyBindings(viewModel);
+        });
+    </script>
+}
+

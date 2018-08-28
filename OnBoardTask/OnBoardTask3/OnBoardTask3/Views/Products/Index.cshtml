@@ -1,0 +1,139 @@
+﻿@model IEnumerable<OnBoardTask3.Models.Product>
+
+@{
+    ViewBag.Title = "Product Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    <a href="javascript:void(1);" id="createProduct">Create Product</a>
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.ProductName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Price)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProductName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Price)
+            </td>
+            <td>
+                <a href="javascript:void(0);" class="editProduct" data-id="@item.ProductId">Edit</a> |
+                @*<a href="javascript:void(0);" class="viewProduct" data-id="@item.ProductId">Details</a> *@ |
+                <a href="javascript:void(0);" class="deleteProduct" data-id="@item.ProductId">Delete</a>
+            </td>
+        </tr>
+    }
+
+</table>
+<script src="~/Scripts/jquery-3.3.1.min.js"></script>
+<script src="~/Scripts/knockout-3.4.2.js"></script>
+
+<script>
+    $(function () {
+        ko.applyBindings(modelView);
+        modelView.viewProducts();
+    });
+    var modelView = {
+        Products: ko.observableArray([]),
+        viewProducts: function () {
+            var thisObj = this;
+            try {
+                $.ajax({
+                    url: '/Products/ProductList',
+                    type: 'GET',
+                    dataType: 'json',
+                    //data: Json.stringify(this),
+                    contentType: 'application/json',
+                    success: function (data) {
+                        thisObj.Products(data); //Here we are assigning values to KO Observable array
+                    },
+                    //error: function (err) {
+                    //    alert(err.status + " : " + err.statusText);
+                    //}
+                });
+            } catch (e) {
+                window.location.href = '/Products/Index/';
+            }
+        }
+    };
+
+</script>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" id="myModalContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="clsBtn">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        var getAjaxContent = function (controller, action, data) {
+            var URL = "/" + controller + "/" + action;
+            var options = { "backdrop": "static", keyboard: true };
+            $.ajax({
+                type: "GET",
+                url: URL,
+                contentType: "application/json; charset=utf-8",
+                data: data,
+                datatype: "html",
+                success: function (data) {
+                    $('#myModalContent').html(data);
+                    $('#myModal').modal(options);
+                    $('#myModal').modal('show');
+                },
+                error: function () {
+                    alert("Dynamic content load failed.");
+                }
+            });
+        }
+        $("document").ready(function () {
+           @* $('.viewProduct').click(function () {
+                var $buttonClicked = $(this);
+                var id = $buttonClicked.attr('data-id');
+                getAjaxContent("Products", "Details", { "ID": id });
+            });*@
+
+
+            $('#createProduct').click(function () {
+                getAjaxContent("Products", "Create", null);
+            });
+
+            $('.editProduct').click(function () {
+                var $buttonClicked = $(this);
+                var id = $buttonClicked.attr('data-id');
+                getAjaxContent("Products", "Edit", { "ID": id });
+            });
+
+            $('.deleteProduct').click(function () {
+                var $buttonClicked = $(this);
+                var id = $buttonClicked.attr('data-id');
+                getAjaxContent("Products", "Delete", { "ID": id });
+            });
+        });
+
+    </script>
+}

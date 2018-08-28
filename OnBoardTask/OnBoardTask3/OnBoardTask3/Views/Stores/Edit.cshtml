@@ -1,0 +1,81 @@
+﻿@model OnBoardTask3.Models.Store
+
+@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Edit</h2>
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <h4>Store</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.StoreId)
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.StoreName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.StoreName, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.StoreName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.StoreAddress, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.StoreAddress, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.StoreAddress, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+<script src="~/Scripts/jquery-3.3.1.min.js"></script>
+<script src="~/Scripts/knockout-3.4.2.js"></script>
+
+<script>
+    $(function () {
+        ko.applyBindings(modelEdit);
+    });
+    var modelEdit = {
+        StoreName: ko.observable(""),
+        StoreAddress: ko.observable(""),
+        editCourse: function () {
+            try {
+                $.ajax({
+                    url: '/Stores/Edit',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: ko.toJSON(this),
+                    contentType: 'application/json',
+                    success: successCallback,
+                    error: errorCallback
+                });
+            } catch (e) {
+                window.location.href = '/Stores/Index/';
+            }
+        }
+    };
+    function successCallback(data) {
+        window.location.href = '/Stores/Index/';
+    }
+    function errorCallback(err) {
+        window.location.href = '/Stores/Index/';
+    }
+</script>

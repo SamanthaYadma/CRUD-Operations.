@@ -1,0 +1,78 @@
+﻿@model OnBoardTask3.Models.Product
+
+@{
+    /**/
+
+    ViewBag.Title = "Delete";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Delete</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>Product</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.ProductName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ProductName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Price)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Price)
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            @Html.ActionLink("Back to List", "Index")
+        </div>
+    }
+</div>
+
+<script src="~/Scripts/jquery-3.3.1.min.js"></script>
+<script src="~/Scripts/knockout-3.4.2.js"></script>
+
+<script>
+    $(function () {
+        ko.applyBindings(modelDelete);
+    });
+var modelDelete = {
+    ProductName: ko.observable(""),
+    Price: ko.observable(""),
+    deleteCourse: function () {
+        try {
+            $.ajax({
+                url: '/Products/Delete',
+                type: 'POST',
+                dataType: 'json',
+                data: ko.toJSON(this),
+                contentType: 'application/json',
+                success: successCallback,
+                error: errorCallback
+            });
+        } catch (e) {
+            window.location.href = '/Products/Index/';
+        }
+    }
+};
+function successCallback(data) {
+    window.location.href = '/Products/Index/';
+}
+function errorCallback(err) {
+    window.location.href = '/Products/Index/';
+}
+</script>

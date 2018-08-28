@@ -1,0 +1,142 @@
+﻿@model IEnumerable<OnBoardTask3.Models.Customer>
+@{
+    ViewBag.Title = "Customer Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    <a href="javascript:void(1);" id="createCustomer">Create Customer</a>
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.CustomerName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CustomerAddress)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.CustomerName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CustomerAddress)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.CustomerId }) |
+                @* @Html.ActionLink("Details", "Details", new { id = item.CustomerId }) |*@
+                @Html.ActionLink("Delete", "Delete", new { id = item.CustomerId })
+            </td>
+        </tr>
+    }
+
+</table>
+
+
+
+<script src="~/Scripts/jquery-3.3.1.min.js"></script>
+<script src="~/Scripts/knockout-3.4.2.js"></script>
+
+
+<script>
+    $(function () {
+        ko.applyBindings(modelView);
+        modelView.viewCustomers();
+    });
+    var modelView = {
+        Customers: ko.observableArray([]),
+        viewCustomers: function () {
+            var thisObj = this;
+            try {
+                $.ajax({
+                    url: '/Customers/CustomerList',
+                    type: 'GET',
+                    dataType: 'json',
+                    //data: Json.stringify(this),
+                    contentType: 'application/json',
+                    success: function (data) {
+                        thisObj.Customers(data); //Here we are assigning values to KO Observable array
+                    },
+                    //error: function (err) {
+                    //    alert(err.status + " : " + err.statusText);
+                    //}
+                });
+            } catch (e) {
+                window.location.href = '/Customers/Index/';
+            }
+        }
+    };
+
+</script>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" id="myModalContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="clsBtn">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        var getAjaxContent = function (controller, action, data) {
+            var URL = "/" + controller + "/" + action;
+            var options = { "backdrop": "static", keyboard: true };
+            $.ajax({
+                type: "GET",
+                url: URL,
+                contentType: "application/json; charset=utf-8",
+                data: data,
+                datatype: "html",
+                success: function (data) {
+                    $('#myModalContent').html(data);
+                    $('#myModal').modal(options);
+                    $('#myModal').modal('show');
+                },
+                error: function () {
+                    alert("Dynamic content load failed.");
+                }
+            });
+        }
+        $("document").ready(function () {
+            //$('.viewCustomer').click(function () {
+            //    var $buttonClicked = $(this);
+            //    var id = $buttonClicked.attr('data-id');
+            //    getAjaxContent("Customers", "Details", { "ID": id });
+            //});
+
+
+            $('#createCustomer').click(function () {
+                getAjaxContent("Customers", "Create", null);
+            });
+
+            $('.editCustomer').click(function () {
+                var $buttonClicked = $(this);
+                var id = $buttonClicked.attr('data-id');
+                getAjaxContent("Customers", "Edit", { "ID": id });
+            });
+
+            $('.deleteCustomer').click(function () {
+                var $buttonClicked = $(this);
+                var id = $buttonClicked.attr('data-id');
+                getAjaxContent("Customers", "Delete", { "ID": id });
+            });
+        });
+
+    </script>
+}
